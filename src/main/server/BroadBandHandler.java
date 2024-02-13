@@ -1,4 +1,4 @@
-package main.handlers;
+package main.server;
 
 public class BroadBandHandler {
 }
