@@ -1,4 +1,4 @@
-package edu.brown.cs.student.main;
+package main.csvparser.src.main.java.edu.brown.cs.student.main;
 
 import static java.lang.System.exit;
 

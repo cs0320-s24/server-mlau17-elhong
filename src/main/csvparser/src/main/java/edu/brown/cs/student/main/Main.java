@@ -1,4 +1,4 @@
-package edu.brown.cs.student.main;
+package main.csvparser.src.main.java.edu.brown.cs.student.main;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -36,10 +36,11 @@ public final class Main {
     try {
       System.out.println(
           "Welcome User! This program can read a CSV File and find where the value you are looking for is located! "
-              + "Please enter your EXACT/ABSOLUTE file path: ");
+              + "Please enter your file path starting after data/ ");
       /*Finding the path to the CSV File and then reading it using FileReader.*/
       this.Path = input.nextLine();
-      this.readTheFile = new FileReader(this.Path);
+      String filepath = "data/" + this.Path;
+      this.readTheFile = new FileReader(filepath);
       /*If the file cannot be found, print out an error message.*/
     } catch (FileNotFoundException | InputMismatchException e) {
       System.err.println(

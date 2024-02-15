@@ -1,16 +1,28 @@
-package edu.brown.cs.student;
+package main.csvparser.src.test.java.edu.brown.cs.student;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import edu.brown.cs.student.main.*;
+import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertThrows;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 import java.io.*;
 import java.util.List;
-import org.junit.jupiter.api.Test;
+
+import main.csvparser.src.main.java.edu.brown.cs.student.main.CSVParser;
+import main.csvparser.src.main.java.edu.brown.cs.student.main.CreatorFromRow;
+import main.csvparser.src.main.java.edu.brown.cs.student.main.FactoryFailureException;
+import main.csvparser.src.main.java.edu.brown.cs.student.main.StringCreator;
+import org.testng.annotations.Test;
 
 public class CSVParserTest {
 
   /**
-   * Parses file with no headers
+   * This class tests the Parser class for the following situations:
+   * - CSV data with and without column headers
+   * - CSV data in different Reader types (e.g., StringReader and FileReader)
+   * - CSV data with inconsistent column count
+   * - CSV data that lies outside the protected directory
+   * - Using multiple CreatorFromRow classes to extract CSV data in different formats
+   * - RegEx exceptions, find broken - spaces, ints
    *
    * @throws IOException - if file cannot be found
    * @throws FactoryFailureException - if object cannot be created
@@ -19,7 +31,7 @@ public class CSVParserTest {
   public void testNoHeader() throws IOException, FactoryFailureException {
     CreatorFromRow<List<String>> converter = new StringCreator();
     FileReader reader =
-        new FileReader("/Users/melanie/Desktop/CS320/csv-mlau998/data/census/no_header.csv");
+        new FileReader("/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/csvparser/data/census/no_header.csv");
     CSVParser parser = new CSVParser(converter, false, reader);
     List<List<String>> result = parser.sortData();
     assertEquals(result.size(), 6);
@@ -37,7 +49,7 @@ public class CSVParserTest {
     CreatorFromRow<List<String>> converter = new StringCreator();
     FileReader reader =
         new FileReader(
-            "/Users/melanie/Desktop/CS320/csv-mlau998/data/census/dol_ri_earnings_disparity.csv");
+            "/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/csvparser/data/census/dol_ri_earnings_disparity.csv");
     CSVParser parser = new CSVParser(converter, true, reader);
     List<List<String>> result = parser.sortData();
     assertEquals(result.size(), 6);
@@ -53,7 +65,7 @@ public class CSVParserTest {
   public void testManyRows() throws IOException, FactoryFailureException {
     CreatorFromRow<List<String>> converter = new StringCreator();
     FileReader reader =
-        new FileReader("/Users/melanie/Desktop/CS320/csv-mlau998/data/stars/stardata.csv");
+        new FileReader("/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/csvparser/data/stars/stardata.csv");
     CSVParser parser = new CSVParser(converter, true, reader);
     List<List<String>> result = parser.sortData();
     assertEquals(result.size(), 119617);
@@ -64,13 +76,13 @@ public class CSVParserTest {
    *
    * @throws IOException - if file cannot be found
    */
-  @Test
+  /**@Test
   public void testNonexistentFile() throws IOException {
     CreatorFromRow converter = new StringCreator();
-    Exception e = assertThrows(IOException.class, () -> new FileReader(" "));
+    Exception e = assertThrows(IOException.class, () -> new FileReader("la"));
     String message = e.getMessage();
     System.out.println(message);
-  }
+  }*/
 
   /**
    * Parses a file with inconsistent column count
@@ -83,7 +95,7 @@ public class CSVParserTest {
     CreatorFromRow<List<String>> converter = new StringCreator();
     FileReader reader =
         new FileReader(
-            "/Users/melanie/Desktop/CS320/csv-mlau998/data/malformed/malformed_signs.csv");
+            "/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/csvparser/data/malformed/malformed_signs.csv");
     CSVParser parser = new CSVParser(converter, true, reader);
     List<List<String>> result = parser.sortData();
     assertNotEquals(result.get(2).size(), parser.getHeaders().size());

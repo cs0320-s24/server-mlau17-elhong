@@ -1,13 +1,12 @@
-package edu.brown.cs.student;
+package main.csvparser.src.test.java.edu.brown.cs.student;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import edu.brown.cs.student.main.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.jupiter.api.Test;
+import main.csvparser.src.main.java.edu.brown.cs.student.main.*;
+import org.testng.annotations.Test;
 
 public class SearchTest {
   /**

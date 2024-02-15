@@ -1,9 +1,76 @@
+package main.csvparser.src.main.java.edu.brown.cs.student.main;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Search takes in a variety of parameters to help the user find the value they are looking for
+ * within a specific CSV file.
+ */
+public class Search {
+  private CSVParser csvtoparse;
+  private String value;
+  private String column;
+  private ArrayList<Integer> containedRows;
+  private String nameOrindex;
+
+  /**
+   * Constructor for the Search class.
+   *
+   * @param parser - the file that has been parsed.
+   * @param input - the value that the user is looking for in the file.
+   * @param columnIdentifier - the variable that stores the designated column for searching as
+   *     requested by the user.
+   * @param nameOrIndex - the variable that stores the user's preference for utilizing either header names or
+   *     column indices.
+   */
+  public Search(CSVParser parser, String input, String columnIdentifier, String nameOrIndex) {
+    this.csvtoparse = parser;
+    this.value = input;
+    this.column = columnIdentifier;
+    this.nameOrindex = nameOrIndex;
+    this.containedRows = new ArrayList<Integer>();
+  }
+
+  /**
+   * Second constructor for the Search class in case there is no column identifier.
+   *
+   * @param parser - the file that has been parsed;
+   * @param input - the value that the user is looking for in the file.
+   */
+  public Search(CSVParser parser, String input) {
+    this(parser, input, null, null);
+  }
+
+  /**
+   * Method that finds where the input is located using column indices.
+   *
+   * @throws ArrayIndexOutOfBoundsException - when the inputted column index is out of bounds of the
+   *     file
+   * @throws IOException - when the buffered reader cannot read/find the file.
+   * @throws FactoryFailureException - when the object cannot be created.
+   */
+  public void findValueIndices()
+          throws IOException, FactoryFailureException, ArrayIndexOutOfBoundsException {
+    List<List<String>> fileParsed = this.csvtoparse.sortData();
+    int index = Integer.parseInt(this.column);
+    for (List<String> eachRow : fileParsed) {
+      Integer rowIndices = fileParsed.indexOf(eachRow) + 1;
+      try {
+        eachRow.get(index);
+      } catch (ArrayIndexOutOfBoundsException e) {
+        System.err.println("The given index is out of bounds.");
+      }
+      if (eachRow.get(index).toLowerCase().contains(this.value.toLowerCase())
+              && !this.containedRows.contains(rowIndices)) {
+        this.containedRows.add(rowIndices);
+      }
     }
   }
 
   /**
-   * Method that find where the input is located by going through the entire dataset.
+   * Method that finds where the input is located by going through the entire dataset.
    *
    * @throws IOException - when the buffered reader cannot read/find the file.
    * @throws FactoryFailureException - when the object cannot be created.
