@@ -1,5 +1,8 @@
 package main.server;
 
+import main.server.csvhandlers.LoadCSVHandler;
+import main.server.csvhandlers.SearchCSVHandler;
+import main.server.csvhandlers.ViewCSVHandler;
 import spark.Spark;
 
 import java.io.FileNotFoundException;
@@ -38,9 +41,9 @@ public class Server {
 
     private void run(){
         Scanner userInput = new Scanner(System.in);
-        System.out.println("Welcome, this server can make API requests to load, view, or search the contents of a CSV " +
+        System.out.println("Server started. Welcome, this server can make API requests to load, view, or search the contents of a CSV " +
                 "file by calling the `loadcsv`, `viewcsv` or `searchcsv` endpoints. " +
-                "For `loadcsv`, please provide the path of the CSV file to load: " );
+                "To first `loadcsv`, please provide the path of the CSV file to load: " );
         String fileName = userInput.nextLine();
 
         // Reader created to scan csv data
@@ -53,10 +56,12 @@ public class Server {
             System.exit(0);
             throw new RuntimeException(e);
         }
-//      // Setting up the handler for the GET /loadcsv, /searchcsv, and /viewcsv endpoints
-        Spark.get("loadcsv", new LoadCSVHandler(filepath));
-        Spark.get("searchcsv", new SearchCSVHandler());
-        Spark.get("viewcsv", new ViewCSVHandler());
+
+      // Setting up the handler for the GET /loadcsv, /searchcsv, and /viewcsv endpoints
+        LoadCSVHandler load = new LoadCSVHandler(filepath);
+        Spark.get("loadcsv", load);
+        Spark.get("viewcsv", new ViewCSVHandler(load));
+        Spark.get("searchcsv", new SearchCSVHandler(load));
 
         // TODO needed?? what does this do
         Spark.init();

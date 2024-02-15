@@ -30,7 +30,7 @@ public final class Main {
 
   private Main(String[] args) {}
 
-  private void run() throws IOException, FactoryFailureException {
+  public void run() throws IOException, FactoryFailureException {
     /*Scanner allows us to collect and store user input.*/
     Scanner input = new Scanner(System.in);
     try {

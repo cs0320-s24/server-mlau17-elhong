@@ -98,7 +98,7 @@ public class CSVParserTest {
             "/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/csvparser/data/malformed/malformed_signs.csv");
     CSVParser parser = new CSVParser(converter, true, reader);
     List<List<String>> result = parser.sortData();
-    assertNotEquals(result.get(2).size(), parser.getHeaders().size());
+    assertEquals(result.get(2).size(), 2);
   }
 
   /**

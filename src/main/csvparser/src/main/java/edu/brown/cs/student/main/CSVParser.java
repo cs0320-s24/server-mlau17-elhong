@@ -58,8 +58,14 @@ public class CSVParser<T> {
       }
       while ((eachLine = reader.readLine()) != null) {
         List<String> rowData = Arrays.asList(regexSplitCSVRow.split(eachLine));
-        this.data.add(this.parseType.create(rowData));
+        if(rowData.size() == this.headers.size()) {
+          this.data.add(this.parseType.create(rowData));
+        }
+        else {
+          System.out.println("Malformed row identified and deleted.");
+        }
       }
+
     } catch (IOException e) {
       System.err.println("File is not found.");
       exit(0);

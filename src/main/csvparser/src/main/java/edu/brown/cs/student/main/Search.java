@@ -18,12 +18,12 @@ public class Search {
   /**
    * Constructor for the Search class.
    *
-   * @param parser - the file that has been parsed.
-   * @param input - the value that the user is looking for in the file.
+   * @param parser           - the file that has been parsed.
+   * @param input            - the value that the user is looking for in the file.
    * @param columnIdentifier - the variable that stores the designated column for searching as
-   *     requested by the user.
-   * @param nameOrIndex - the variable that stores the user's preference for utilizing either header names or
-   *     column indices.
+   *                         requested by the user.
+   * @param nameOrIndex      - the variable that stores the user's preference for utilizing either header names or
+   *                         column indices.
    */
   public Search(CSVParser parser, String input, String columnIdentifier, String nameOrIndex) {
     this.csvtoparse = parser;
@@ -37,7 +37,7 @@ public class Search {
    * Second constructor for the Search class in case there is no column identifier.
    *
    * @param parser - the file that has been parsed;
-   * @param input - the value that the user is looking for in the file.
+   * @param input  - the value that the user is looking for in the file.
    */
   public Search(CSVParser parser, String input) {
     this(parser, input, null, null);
@@ -47,9 +47,9 @@ public class Search {
    * Method that finds where the input is located using column indices.
    *
    * @throws ArrayIndexOutOfBoundsException - when the inputted column index is out of bounds of the
-   *     file
-   * @throws IOException - when the buffered reader cannot read/find the file.
-   * @throws FactoryFailureException - when the object cannot be created.
+   *                                        file
+   * @throws IOException                    - when the buffered reader cannot read/find the file.
+   * @throws FactoryFailureException        - when the object cannot be created.
    */
   public void findValueIndices()
           throws IOException, FactoryFailureException, ArrayIndexOutOfBoundsException {
@@ -72,7 +72,7 @@ public class Search {
   /**
    * Method that finds where the input is located by going through the entire dataset.
    *
-   * @throws IOException - when the buffered reader cannot read/find the file.
+   * @throws IOException             - when the buffered reader cannot read/find the file.
    * @throws FactoryFailureException - when the object cannot be created.
    */
   public void findEntire() throws IOException, FactoryFailureException {
@@ -82,7 +82,7 @@ public class Search {
       if (eachRow != null) {
         for (String eachValue : eachRow) {
           if (eachValue.toLowerCase().contains(this.value.toLowerCase())
-              && !this.containedRows.contains(rowIndices)) {
+                  && !this.containedRows.contains(rowIndices)) {
             this.containedRows.add(rowIndices);
           }
         }
@@ -93,7 +93,7 @@ public class Search {
   /**
    * Method that finds where the input is located using column names.
    *
-   * @throws IOException - when the buffered reader cannot read/find the file.
+   * @throws IOException             - when the buffered reader cannot read/find the file.
    * @throws FactoryFailureException - when the object cannot be created.
    */
   public void findValueName() throws IOException, FactoryFailureException {
@@ -103,8 +103,8 @@ public class Search {
       for (List<String> eachRow : fileParsed) {
         Integer rowIndices = fileParsed.indexOf(eachRow) + 1;
         if (eachRow != null
-            && eachRow.get(index).toLowerCase().contains(this.value.toLowerCase())
-            && !this.containedRows.contains(rowIndices)) {
+                && eachRow.get(index).toLowerCase().contains(this.value.toLowerCase())
+                && !this.containedRows.contains(rowIndices)) {
           this.containedRows.add(rowIndices);
         }
       }
@@ -116,12 +116,12 @@ public class Search {
    * identifiers, will populate the containedRows list accordingly.
    *
    * @throws ArrayIndexOutOfBoundsException - when the inputted column index is out of bounds of the
-   *     file
-   * @throws IOException - when the buffered reader cannot read/find the file.
-   * @throws FactoryFailureException - when the object cannot be created.
+   *                                        file
+   * @throws IOException                    - when the buffered reader cannot read/find the file.
+   * @throws FactoryFailureException        - when the object cannot be created.
    */
   public void searcher()
-      throws IOException, FactoryFailureException, ArrayIndexOutOfBoundsException {
+          throws IOException, FactoryFailureException, ArrayIndexOutOfBoundsException {
     List<List<String>> fileParsed = this.csvtoparse.sortData();
     if (this.csvtoparse.getHeaders() != null) {
       if (this.column != null && this.nameOrindex.equals("name")) {
@@ -145,12 +145,12 @@ public class Search {
   public void print() {
     if (this.containedRows.isEmpty()) {
       System.out.println(
-          "The value "
-              + " '"
-              + this.value
-              + "' "
-              + " does not exist in this file or "
-              + "the column name is wrong");
+              "The value "
+                      + " '"
+                      + this.value
+                      + "' "
+                      + " does not exist in this file or "
+                      + "the column name is wrong");
     } else if (this.csvtoparse.getHeaders() != null) {
       System.out.println("Here are the rows containing '" + this.value + "' ");
       for (Integer eachNumber : this.containedRows) {
@@ -166,5 +166,15 @@ public class Search {
 
   public List<Integer> getContainedRow() {
     return this.containedRows;
+  }
+
+  public List<List<String>> getRowResults() throws IOException, FactoryFailureException {
+    List<List<String>> data = new ArrayList<>();
+    List<List<String>> unfilteredData = this.csvtoparse.sortData();
+    for (Integer eachNumber : this.containedRows){
+      List<String> list = unfilteredData.get(eachNumber);
+      data.add(list);
+    }
+    return data;
   }
 }
