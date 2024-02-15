@@ -8,9 +8,7 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
-import java.awt.desktop.SystemSleepEvent;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -20,17 +18,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+//import com.google.common.cache.CacheLoader;
+//import com.google.common.cache.LoadingCache;
 
-public class BroadBandHandler implements Route{
+public class BroadBandHandler implements Route {
 
-    private List<List<String>> bBD;
-
-    public BroadBandHandler(List<List<String>> broadBandData) throws URISyntaxException, IOException, InterruptedException {
-        this.bBD = broadBandData;
-    }
+    private List<List<String>> bBD = null;
 
     Cache<String, String> stateIdCache = CacheBuilder.newBuilder()
             .maximumSize(100)
@@ -40,7 +35,7 @@ public class BroadBandHandler implements Route{
             .maximumSize(100)
             .build();
 
-    private void CacheStateId() throws URISyntaxException, IOException, InterruptedException {
+    private void CacheStateId() throws IOException, InterruptedException {
 
         String url = "https://api.census.gov/data/2010/dec/sf1?get=NAME&for=state:*";
 
@@ -69,7 +64,7 @@ public class BroadBandHandler implements Route{
                     stateIdCache.put(name, stateID);
                 }
             }
-        } catch (URISyntaxException){
+        } catch (URISyntaxException e) {
             System.err.println("Error: URI is wrong, get it together");
         }
     }
@@ -89,8 +84,10 @@ public class BroadBandHandler implements Route{
         return sentAPIResponse.body();
     }
 
-    private void findBroadBand(String stateName, String countyName) throws URISyntaxException, IOException,
+    private void findBroadBand(String stateName, String countyName) throws IOException,
             InterruptedException {
+
+        CacheStateId();
 
         String idOfState = stateIdCache.getIfPresent(stateName);
 
@@ -119,7 +116,7 @@ public class BroadBandHandler implements Route{
                 String broadBandData = sendRequest(finalURL);
                 this.bBD = ACSDataSource.deserializeACSPackage(broadBandData);
 
-            } catch (URISyntaxException) {
+            } catch (URISyntaxException e) {
                 System.err.println("Error: URI is wrong, get it together");
             }
         }
@@ -137,7 +134,7 @@ public class BroadBandHandler implements Route{
      * @param response The response object providing functionality for modifying the response
      */
     @Override
-    public Object handle(Request request, Response response) {
+    public Object handle(Request request, Response response) throws IOException, InterruptedException {
         // If you are interested in how parameters are received, try commenting out and
         // printing these lines! Notice that requesting a specific parameter requires that parameter
         // to be fulfilled.
@@ -152,12 +149,13 @@ public class BroadBandHandler implements Route{
 
         // Creates a hashmap to store the results of the request
         Map<String, Object> responseMap = new HashMap<>();
+        findBroadBand(stateName, countyName);
         try {
             responseMap.put("result", "success");
             responseMap.put("Percentage", this.bBD);
             return responseMap;
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             responseMap.put("result", "Exception");
         }
         return responseMap;
