@@ -10,10 +10,10 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
-/** This class creates a response containing the data from the CSV file that was first parsed in LoadCSVHandler, 
-* to show the viewers what the data looks like. 
-*/
-
+/**
+ * This class creates a response containing the data from the CSV file that was first parsed in
+ * LoadCSVHandler, to show the viewers what the data looks like.
+ */
 public class ViewCSVHandler implements Route {
 
   public GlobalData data;
@@ -28,8 +28,8 @@ public class ViewCSVHandler implements Route {
   }
 
   /**
-   * This method creates a response map by accessing the CSV data from the global variable data using a getter method and 
-   * returns this data to the user.
+   * This method creates a response map by accessing the CSV data from the global variable data
+   * using a getter method and returns this data to the user.
    */
   @Override
   public Object handle(Request request, Response response) {
@@ -45,5 +45,4 @@ public class ViewCSVHandler implements Route {
     // converting to JSON
     return adapter.toJson(responseMap);
   }
-
 }

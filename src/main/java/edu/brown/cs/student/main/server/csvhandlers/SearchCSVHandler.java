@@ -12,16 +12,18 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
-/** 
-* This class handles searching for a given searchword by creating an instance of the Search class and passing in the CSVParser
-* created in LoadCSVHandler. The rows containing the searchword are then returned to the API user.
-*/
+/**
+ * This class handles searching for a given searchword by creating an instance of the Search class
+ * and passing in the CSVParser created in LoadCSVHandler. The rows containing the searchword are
+ * then returned to the API user.
+ */
 public class SearchCSVHandler implements Route {
 
   public LoadCSVHandler load;
 
   /**
-   * Constructor accepts a global varibale GlobalData and the LoadCSVHandler that was previously called.
+   * Constructor accepts a global varibale GlobalData and the LoadCSVHandler that was previously
+   * called.
    *
    * @param data
    * @param load
@@ -30,9 +32,7 @@ public class SearchCSVHandler implements Route {
     this.load = load;
   }
 
-  /**
-  * This method handles the searchWord query, creating a new Search with the given parameters.
-  */
+  /** This method handles the searchWord query, creating a new Search with the given parameters. */
   @Override
   public Object handle(Request request, Response response) throws Exception {
     Moshi moshi = new Moshi.Builder().build();
