@@ -126,6 +126,7 @@ public class BroadBandHandler implements Route {
           for (List<String> state : dataPackage) {
               String name = state.get(0);
               System.out.println(name);
+              String secondName =
               if (name.equals(countyName + " County, " + stateName)) {
                 System.out.println("name equals worked");
                 String countyID = state.get(2);
