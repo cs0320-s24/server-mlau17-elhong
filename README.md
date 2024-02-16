@@ -23,14 +23,19 @@ The third server folder contains the following main classes used in server:
  
 ** -> BroadBandHandler**
  The BroadBandHandler class 
+ 
  ** -> ACSCensusData**
 The ACSCensusData class
+
 ** -> LoadCSVHandler**
  The LoadCSVHandler class
+ 
 ** -> ViewCSVHandler**
  The ViewCSVHandler class
+ 
 ** -> SearchCSVHandler**
  The SearchCSVHandler class
+ 
 ** -> GlobalData**
  The GlobalData class is a wrapper class 
 
