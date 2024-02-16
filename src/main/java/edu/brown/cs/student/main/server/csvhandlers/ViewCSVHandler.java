@@ -32,7 +32,7 @@ public class ViewCSVHandler implements Route {
    * returns this data to the user.
    */
   @Override
-  public Object handle(Request request, Response response) throws Exception {
+  public Object handle(Request request, Response response) {
     Moshi moshi = new Moshi.Builder().build();
     Type mapStringObject = Types.newParameterizedType(Map.class, String.class, Object.class);
     JsonAdapter<Map<String, Object>> adapter = moshi.adapter(mapStringObject);
@@ -40,9 +40,10 @@ public class ViewCSVHandler implements Route {
     Map<String, Object> responseMap = new HashMap<>();
 
     responseMap.put("status", "success");
-    responseMap.put("CSVdata", this.data.getCsvData().toString());
+    responseMap.put("CSVdata", this.data.getCsvData());
 
     // converting to JSON
     return adapter.toJson(responseMap);
   }
+
 }
