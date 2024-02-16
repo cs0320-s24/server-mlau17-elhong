@@ -1,5 +1,4 @@
 package edu.brown.cs.student.main.server.csvhandlers;
-
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
@@ -12,7 +11,10 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
-/** This class... */
+/** This class handles the URL input for load csv, requesting the query parameters for filepath and header and creating a 
+*  new CSVParser with this information. It also uses Moshi to deserialize the data, which is stored as a GlobalData 
+*  global variable for the other handlers to access.
+*/
 public class LoadCSVHandler implements Route {
 
   public String filepath;
@@ -21,15 +23,15 @@ public class LoadCSVHandler implements Route {
   public CSVParser parser;
 
   /**
-   * Constructor accepts a filepath
+   * Constructor accepts a GlobalData which stores the results of load.
    *
-   * @param data path of CSV
+   * @param data of the parsed CSV file
    */
   public LoadCSVHandler(GlobalData data) {
     this.data = data;
   }
 
-  /** If from link */
+  /** This method handles the */
   @Override
   public Object handle(Request request, Response response) throws Exception {
     Moshi moshi = new Moshi.Builder().build();
@@ -38,21 +40,20 @@ public class LoadCSVHandler implements Route {
     // map for the response result
     Map<String, Object> responseMap = new HashMap<>();
 
+    // taking the query parameters
     String filepath = request.queryParams("filepath");
-    System.out.println(filepath);
     String header = request.queryParams("header");
-    System.out.println(header);
     this.header = this.checkHeader(header);
-    System.out.println(this.header);
+
+    // TODO error check here
     // if (filepath != null) {
+    
     this.filepath = filepath;
     FileReader reader = new FileReader(filepath);
-    System.out.println("file read");
     this.parser = new CSVParser<List<String>>(new StringCreator(), this.header, reader);
-    System.out.println("file parsed");
     this.data.setCsvData(parser.sortData());
-    System.out.println(this.data.toString());
 
+    // putting the results into the responseMap 
     responseMap.put("status", "success");
     responseMap.put("filepath", filepath);
 
@@ -63,7 +64,7 @@ public class LoadCSVHandler implements Route {
     return adapter.toJson(responseMap);
   }
 
-  /** Method that sets the header boolean according to user input */
+  /** This method sets the header boolean according to user input */
   private Boolean checkHeader(String headerInput) {
     // setting the header to a Boolean
     if (headerInput.equals("Yes")) {
@@ -78,6 +79,7 @@ public class LoadCSVHandler implements Route {
     return false;
   }
 
+  /** This method is called in SearchCSVHandler and gets the CSVParser used in the load process. */
   public CSVParser getParser() {
     return this.parser;
   }
