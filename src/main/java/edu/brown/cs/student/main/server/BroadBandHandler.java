@@ -37,7 +37,7 @@ public class BroadBandHandler implements Route {
   public Object handle(Request request, Response response)
           throws IOException, InterruptedException {
 
-    this.stateCache = new Cache<String, String>();
+    this.stateCache = this.customizableCache(50, 20);
 
     String stateName = request.queryParams("state");
     System.out.println(stateName);
@@ -119,20 +119,26 @@ public class BroadBandHandler implements Route {
 
       try {
         String countyData = sendRequest(url);
+        System.out.println(countyData);
         List<List<String>> dataPackage = ACSDataSource.deserializeACSPackage(countyData);
+        System.out.println(dataPackage);
         if (dataPackage != null) {
           for (List<String> state : dataPackage) {
-            if (countyCache.getIfPresent(countyName) == null) {
               String name = state.get(0);
+              System.out.println(name);
               if (name.equals(countyName + " County, " + stateName)) {
-                String countyID = state.get(3);
+                System.out.println("name equals worked");
+                String countyID = state.get(2);
+                System.out.println(countyID);
                 countyCache.put(countyName, countyID);
+                System.out.println(countyCache);
+
               }
-            }
           }
         }
 
         String idOfCounty = countyCache.getIfPresent(countyName);
+        //System.out.println(idOfCounty);
 
         String finalURL =
             "https://api.census.gov/data/2021/acs/acs1/subject/variables?get=NAME,S2802_C03_022E&for=county:"
@@ -141,7 +147,9 @@ public class BroadBandHandler implements Route {
                 + idOfState;
 
         String broadBandData = sendRequest(finalURL);
+        System.out.println("found broad band data");
         this.bBD = ACSDataSource.deserializeACSPackage(broadBandData);
+        System.out.println(this.bBD);
 
       } catch (URISyntaxException e) {
         System.err.println("Error: URI is wrong, get it together");
