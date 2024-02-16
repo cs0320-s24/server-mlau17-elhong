@@ -7,13 +7,20 @@
 
 # Design Choices
 **Relationships between classes/interfaces:**
+
 Our program is divided in 3 folders: csv parser, data, and server.
+
 The first csvparser folder contains the program to parse and search a given CSV file with the following classes:
  -> 
+ 
 The second data folder contains the csv data on Rhode Island income from the ACS. 
+
 The third server folder contains the following main classes used in server:
+
 ** -> Server**
+
  The Server class 
+ 
 ** -> BroadBandHandler**
  The BroadBandHandler class 
  ** -> ACSCensusData**
