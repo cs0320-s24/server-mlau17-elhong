@@ -1,4 +1,4 @@
-package main.csvparser.src.main.java.edu.brown.cs.student.main;
+package edu.brown.cs.student.main.CSVParser;
 
 import static java.lang.System.exit;
 
@@ -58,10 +58,9 @@ public class CSVParser<T> {
       }
       while ((eachLine = reader.readLine()) != null) {
         List<String> rowData = Arrays.asList(regexSplitCSVRow.split(eachLine));
-        if(rowData.size() == this.headers.size()) {
+        if (rowData.size() == this.headers.size()) {
           this.data.add(this.parseType.create(rowData));
-        }
-        else {
+        } else {
           System.out.println("Malformed row identified and deleted.");
         }
       }

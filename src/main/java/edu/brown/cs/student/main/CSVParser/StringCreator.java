@@ -1,4 +1,4 @@
-package main.csvparser.src.main.java.edu.brown.cs.student.main;
+package edu.brown.cs.student.main.CSVParser;
 
 import java.util.List;
 

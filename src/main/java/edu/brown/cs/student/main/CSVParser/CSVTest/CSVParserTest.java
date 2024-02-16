@@ -1,28 +1,24 @@
-package main.csvparser.src.test.java.edu.brown.cs.student;
+package edu.brown.cs.student.main.CSVParser.CSVTest;
 
-import static org.testng.Assert.assertNotEquals;
-import static org.testng.Assert.assertThrows;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
+
+import edu.brown.cs.student.main.CSVParser.CSVParser;
+import edu.brown.cs.student.main.CSVParser.CreatorFromRow;
+import edu.brown.cs.student.main.CSVParser.FactoryFailureException;
+import edu.brown.cs.student.main.CSVParser.StringCreator;
 import java.io.*;
 import java.util.List;
-
-import main.csvparser.src.main.java.edu.brown.cs.student.main.CSVParser;
-import main.csvparser.src.main.java.edu.brown.cs.student.main.CreatorFromRow;
-import main.csvparser.src.main.java.edu.brown.cs.student.main.FactoryFailureException;
-import main.csvparser.src.main.java.edu.brown.cs.student.main.StringCreator;
 import org.testng.annotations.Test;
 
 public class CSVParserTest {
 
   /**
-   * This class tests the Parser class for the following situations:
-   * - CSV data with and without column headers
-   * - CSV data in different Reader types (e.g., StringReader and FileReader)
-   * - CSV data with inconsistent column count
-   * - CSV data that lies outside the protected directory
-   * - Using multiple CreatorFromRow classes to extract CSV data in different formats
-   * - RegEx exceptions, find broken - spaces, ints
+   * This class tests the Parser class for the following situations: - CSV data with and without
+   * column headers - CSV data in different Reader types (e.g., StringReader and FileReader) - CSV
+   * data with inconsistent column count - CSV data that lies outside the protected directory -
+   * Using multiple CreatorFromRow classes to extract CSV data in different formats - RegEx
+   * exceptions, find broken - spaces, ints
    *
    * @throws IOException - if file cannot be found
    * @throws FactoryFailureException - if object cannot be created
@@ -31,7 +27,8 @@ public class CSVParserTest {
   public void testNoHeader() throws IOException, FactoryFailureException {
     CreatorFromRow<List<String>> converter = new StringCreator();
     FileReader reader =
-        new FileReader("/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/main.csvparser/data/census/no_header.csv");
+        new FileReader(
+            "/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/main.csvparser/data/census/no_header.csv");
     CSVParser parser = new CSVParser(converter, false, reader);
     List<List<String>> result = parser.sortData();
     assertEquals(result.size(), 6);
@@ -65,7 +62,8 @@ public class CSVParserTest {
   public void testManyRows() throws IOException, FactoryFailureException {
     CreatorFromRow<List<String>> converter = new StringCreator();
     FileReader reader =
-        new FileReader("/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/main.csvparser/data/stars/stardata.csv");
+        new FileReader(
+            "/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/main.csvparser/data/stars/stardata.csv");
     CSVParser parser = new CSVParser(converter, true, reader);
     List<List<String>> result = parser.sortData();
     assertEquals(result.size(), 119617);
@@ -76,13 +74,11 @@ public class CSVParserTest {
    *
    * @throws IOException - if file cannot be found
    */
-  /**@Test
-  public void testNonexistentFile() throws IOException {
-    CreatorFromRow converter = new StringCreator();
-    Exception e = assertThrows(IOException.class, () -> new FileReader("la"));
-    String message = e.getMessage();
-    System.out.println(message);
-  }*/
+  /**
+   * @Test public void testNonexistentFile() throws IOException { CreatorFromRow converter = new
+   * StringCreator(); Exception e = assertThrows(IOException.class, () -> new FileReader("la"));
+   * String message = e.getMessage(); System.out.println(message); }
+   */
 
   /**
    * Parses a file with inconsistent column count
