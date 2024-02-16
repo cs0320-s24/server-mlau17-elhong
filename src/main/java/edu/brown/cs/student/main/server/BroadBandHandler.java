@@ -21,10 +21,12 @@ import spark.Route;
 public class BroadBandHandler implements Route {
 
   private List<List<String>> bBD = null;
-  private Cache<String, String> stateCache;
-  private Cache<String, String> countyCache;
+  private final ACSCacheData cache;
   private boolean ifFound;
-  private Cache<String, String> pastRequestCache;
+
+  public BroadBandHandler(ACSCacheData cache){
+    this.cache = cache;
+  }
 
   /**
    * This handle method needs to be filled by any class implementing Route. When the path set in
@@ -36,23 +38,16 @@ public class BroadBandHandler implements Route {
   public Object handle(Request request, Response response)
           throws IOException, InterruptedException, URISyntaxException {
 
-    // Creates three caches for state-state id, for county-county id, and for past requests
-    this.stateCache = this.customizableCache(50, 20);
-    this.countyCache = this.customizableCache(100, 20);
-    this.pastRequestCache = this.customizableCache(100, 20);
-
     String stateName = request.queryParams("state");
     String countyName = request.queryParams("county");
     Map<String, Object> responseMap = new HashMap<>();
 
-    if (this.pastRequestCache.getIfPresent(countyName + ", " + stateName) == null) {
-      System.out.println("New Request, not in cache!");
+    if (this.cache.getPastRequestCache().getIfPresent(countyName + ", " + stateName) ==null) {
       this.findBroadBand(stateName, countyName);
       try {
         responseMap.put("result", "success");
         responseMap.put("for", countyName + " in " + stateName);
         double band = Double.parseDouble(this.bBD.get(1).get(1));
-        System.out.println(band);
         responseMap.put("Percentage", band);
 
         LocalDateTime todayDateTime = LocalDateTime.now();
@@ -60,28 +55,20 @@ public class BroadBandHandler implements Route {
         String theDateTime = todayDateTime.format(dateFormatter);
         responseMap.put("It was retrieved on", theDateTime);
 
-        this.pastRequestCache.put(countyName + ", " + stateName, responseMap.toString());
-        System.out.println("Past Request Cache = " + this.pastRequestCache.toString());
+        this.cache.addPastRequestCache(countyName + ", " + stateName, responseMap.toString());
+
         return responseMap;
 
       } catch (Exception e) {
         responseMap.put("result", "error: problem with inputs");
       }
+    } else {
+      // getting data from past request stored in cache
+      return this.cache.getPastRequestCache().getIfPresent(countyName + ", " + stateName);
     }
-      System.out.println("Found in Cache.");
-      System.out.println(this.pastRequestCache.toString());
-      return this.pastRequestCache.getIfPresent(countyName + ", " + stateName);
+    return responseMap;
   }
 
-
-  public Cache<String, String> customizableCache(int maximumSize, int minuteDelete) {
-    Cache<String, String> makeCache =
-        CacheBuilder.newBuilder()
-            .maximumSize(maximumSize)
-            .expireAfterWrite(minuteDelete, TimeUnit.MINUTES)
-            .build();
-    return makeCache;
-  }
 
   private String sendRequest(String url)
       throws IOException, InterruptedException, URISyntaxException {
@@ -94,10 +81,7 @@ public class BroadBandHandler implements Route {
 
   private void findBroadBand(String stateName, String countyName) throws IOException, InterruptedException, URISyntaxException {
 
-    //Populates the Cache with all the states and its corresponding state IDs
-    this.populateStateCache(stateName);
-
-    String idOfState = this.stateCache.getIfPresent(stateName);
+    String idOfState = this.cache.getStateCache().getIfPresent(stateName);
 
     if (idOfState != null) {
       String url =
@@ -105,7 +89,7 @@ public class BroadBandHandler implements Route {
 
       try {
         //Checks if the county cache already contains that county and if so just pull from cache
-        if (countyCache.getIfPresent(countyName) == null) {
+        if (this.cache.getCountyCache().getIfPresent(countyName) == null) {
           String countyData = sendRequest(url);
           List<List<String>> dataPackage = ACSDataSource.deserializeACSPackage(countyData);
           if (dataPackage != null) {
@@ -114,18 +98,19 @@ public class BroadBandHandler implements Route {
               if (name.equals(countyName + ", " + stateName))  {
                 String countyID = state.get(2);
                 this.ifFound = true;
-                countyCache.put(countyName, countyID);
+                this.cache.addCountyCache(countyName, countyID);
               } else if (name.equals(countyName + " County, " + stateName)){
                 String countyID = state.get(2);
                 this.ifFound = true;
-                countyCache.put(countyName, countyID);
+                this.cache.addCountyCache(countyName, countyID);
               }
             }
           }
         }
 
         if(this.ifFound) {
-          String idOfCounty = countyCache.getIfPresent(countyName);
+          // retrieving county ID from existing cache
+          String idOfCounty = this.cache.getCountyCache().getIfPresent(countyName);
           String finalURL =
                   "https://api.census.gov/data/2021/acs/acs1/subject/variables?get=NAME,S2802_C03_022E&for=county:"
                           + idOfCounty
@@ -146,18 +131,4 @@ public class BroadBandHandler implements Route {
     }
   }
 
-  private void populateStateCache(String nameOfState) throws IOException, URISyntaxException, InterruptedException {
-    String urlForStateId = "https://api.census.gov/data/2010/dec/sf1?get=NAME&for=state:*";
-
-    String stateData = sendRequest(urlForStateId);
-    List<List<String>> packageOfStates = ACSDataSource.deserializeACSPackage(stateData);
-
-    if (packageOfStates != null) {
-      for (List<String> state : packageOfStates) {
-        String name = state.get(0);
-        String stateID = state.get(1);
-        this.stateCache.put(name, stateID);
-      }
-    }
-  }
 }
