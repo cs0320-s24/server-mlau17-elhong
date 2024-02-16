@@ -49,11 +49,15 @@ The ACSCacheData class is like a global class that contains the three caches tha
 
 ## Data structures we used, why you created them, and other high level explanations:
 
+For the ACS API deserializer in ACSDataSource, I converted the JSON package into a List<List<String>> because it was similar to how the file was displayed in the ACS API and it allowed us to parse through it using for loops and find certain values using .get(). 
+
 ## Runtime/ space optimizations:
 
-To minimize runtime on ACS API queries, we created three Guava Cache to store (1) the state to state ID information, (2) country to country ID information, and (3)the results obtained from past queries to avoid unecessarily calling the Census API. As such, by first checking if a county or state has been called in the past and storing the information if it has not been called before, we are able to directly retrieve the data from previous requests. 
+To minimize runtime on ACS API queries, we created three Guava Caches in the class ACSCacheData to store (1) the state to state ID information, (2) country to country ID information, and (3)the results obtained from past queries to avoid unecessarily calling the Census API. As such, we populate the stateID cache once, fill in the countyID in the broadbandHandler, and continuously update the past queries cache by first checking if a county or state has been called in the past and storing the information if it has not been called before, thus directly retrieving the data from a list of previous requests. 
 
 # Errors/Bugs
+
+One of the largest problems we encountered was merging in github, for some reason it would not display where the merge conflicts were and even with help from TAs we could not complete merging without our project getting messed up or some github error message being displayed. Unfortunately, we still cannot figure out where the problem was but to help us continue the project we 
 
 # Tests
  Explain the testing suites that you implemented for your program and how each test ensures that a part of the program   works. 
