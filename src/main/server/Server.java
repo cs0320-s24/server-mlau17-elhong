@@ -1,5 +1,7 @@
 package main.server;
 
+import main.csvparser.src.main.java.edu.brown.cs.student.main.FactoryFailureException;
+import main.server.csvhandlers.GlobalData;
 import main.server.csvhandlers.LoadCSVHandler;
 import main.server.csvhandlers.SearchCSVHandler;
 import main.server.csvhandlers.ViewCSVHandler;
@@ -7,16 +9,19 @@ import spark.Spark;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
 
 import static spark.Spark.after;
 
 /**
- * Top-level class...
+ * Server is the top-level class of this program...
  * */
 
 public class Server {
 
+    static final int port = 3232;
     public static void main(String[] args) {
         int port = 3232;
         Spark.port(port);
@@ -28,44 +33,20 @@ public class Server {
                     response.header("Access-Control-Allow-Methods", "*");
                 });
 
-        // Setting up the handler for the GET /broadband endpoint
+        // Setting up the handlers for the GET /broadband, loadcsv, searchcsv, and viewcsv endpoints
         Spark.get("broadband", new BroadBandHandler());
-        // one out of four endpoints^^
+
+        // making a new Global variable
+        GlobalData serverData = new GlobalData();
+        Spark.get("loadcsv", new LoadCSVHandler(serverData));
+        Spark.get("viewcsv", new ViewCSVHandler(serverData));
+        Spark.get("searchcsv", new SearchCSVHandler(serverData));
+
         Spark.init();
         Spark.awaitInitialization();
 
-        // TODO Notice this link alone leads to a 404... Why is that?
         System.out.println("Server started at http://localhost:" + port);
 
     }
 
-    private void run(){
-        Scanner userInput = new Scanner(System.in);
-        System.out.println("Server started. Welcome, this server can make API requests to load, view, or search the contents of a CSV " +
-                "file by calling the `loadcsv`, `viewcsv` or `searchcsv` endpoints. " +
-                "To first `loadcsv`, please provide the path of the CSV file to load: " );
-        String fileName = userInput.nextLine();
-
-        // Reader created to scan csv data
-        FileReader fr = null;
-        String filepath = "data/" + fileName;
-        try {
-            fr = new FileReader(filepath);
-        } catch (FileNotFoundException e) {
-            System.err.println("File not found, please try again.");
-            System.exit(0);
-            throw new RuntimeException(e);
-        }
-
-      // Setting up the handler for the GET /loadcsv, /searchcsv, and /viewcsv endpoints
-        LoadCSVHandler load = new LoadCSVHandler(filepath);
-        Spark.get("loadcsv", load);
-        Spark.get("viewcsv", new ViewCSVHandler(load));
-        Spark.get("searchcsv", new SearchCSVHandler(load));
-
-        // TODO needed?? what does this do
-        Spark.init();
-        Spark.awaitInitialization();
-
-    }
 }

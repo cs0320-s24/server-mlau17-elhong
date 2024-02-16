@@ -1,5 +1,8 @@
 package main.server.csvhandlers;
 
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.Moshi;
+import com.squareup.moshi.Types;
 import main.csvparser.src.main.java.edu.brown.cs.student.main.*;
 import spark.Request;
 import spark.Response;
@@ -9,9 +12,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.lang.reflect.Type;
+import java.util.*;
 
 /**
  * This class...
@@ -21,15 +23,15 @@ public class LoadCSVHandler implements Route {
 
     public String filepath;
     public Boolean header;
-    public CSVParser data;
+    public GlobalData data;
 
     /**
      * Constructor accepts a filepath
      *
-     * @param filepath file path of CSV
+     * @param data path of CSV
      */
-    public LoadCSVHandler(String filepath) {
-    this.filepath = filepath;
+    public LoadCSVHandler(GlobalData data) {
+        this.data = data;
         }
 
         /**
@@ -37,13 +39,29 @@ public class LoadCSVHandler implements Route {
          * */
     @Override
     public Object handle(Request request, Response response) throws Exception {
+        Moshi moshi = new Moshi.Builder().build();
+        Type mapStringObject = Types.newParameterizedType(Map.class, String.class, Object.class);
+        JsonAdapter<Map<String, Object>> adapter = moshi.adapter(mapStringObject);
+        // map for the response result
+        Map<String, Object> responseMap = new HashMap<>();
+
         String filepath = request.queryParams("filepath");
-        this.filepath = filepath;
         String header = request.queryParams("header");
         this.header = this.checkHeader(header);
-        this.loadCSV();
-        // TODO this is sus
-        return null;
+        if (filepath != null) {
+            this.filepath = filepath;
+            FileReader reader = new FileReader(filepath);
+            CSVParser parser = new CSVParser<List<String>>(new StringCreator(), this.header,reader);
+            this.data.setCsvData(parser.sortData());
+
+            responseMap.put("status", "success");
+            responseMap.put("filepath", filepath);
+
+            //converting to JSON
+            return adapter.toJson(responseMap);
+        }
+        responseMap.put("status", "error_datasource");
+        return adapter.toJson(responseMap);
     }
 
     /**
@@ -62,20 +80,4 @@ public class LoadCSVHandler implements Route {
         return false;
     }
 
-    /**
-     * If directly from terminal
-     * */
-    private void loadCSV() throws IOException, FactoryFailureException{
-        // Instantiate a Reader for the file
-        Reader fileReader = new FileReader(this.filepath);
-        // Instantiate a CSVParser object with appropriate parameters
-        CSVParser parser = new CSVParser<>(new StringCreator(), true, fileReader);
-        // Call the method to parse the CSV file
-        parser.sortData();
-        this.data = parser;
-    }
-
-    public CSVParser getCSVparser(){
-        return this.data;
-    }
 }
