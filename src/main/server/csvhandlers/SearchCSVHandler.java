@@ -39,13 +39,13 @@ public class SearchCSVHandler implements Route {
 
 
         String searchWord = request.queryParams("searchWord");
-         calling search class to get CSV data
-        Search search= new Search(CSVParser, searchWord);
+         //calling search class to get CSV data
+        //Search search= new Search(CSVParser, searchWord);
         //String result = search.searcher().;
 
             // adding actual result data to return to web API
             responseMap.put("status", "success");
-            responseMap.put("searchResults", result);
+            //responseMap.put("searchResults", result);
             return responseMap;
         }
     }
