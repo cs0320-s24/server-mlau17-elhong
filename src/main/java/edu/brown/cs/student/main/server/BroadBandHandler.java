@@ -1,7 +1,5 @@
 package edu.brown.cs.student.main.server;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -13,7 +11,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -23,6 +20,7 @@ public class BroadBandHandler implements Route {
   private List<List<String>> bBD = null;
   private final ACSCacheData cache;
   private boolean ifFound;
+  private String errorMessage;
 
   public BroadBandHandler(ACSCacheData cache){
     this.cache = cache;
@@ -42,7 +40,7 @@ public class BroadBandHandler implements Route {
     String countyName = request.queryParams("county");
     Map<String, Object> responseMap = new HashMap<>();
 
-    if (this.cache.getPastRequestCache().getIfPresent(countyName + ", " + stateName) ==null) {
+    if (this.cache.getPastRequestCache().getIfPresent(countyName + ", " + stateName) == null) {
       this.findBroadBand(stateName, countyName);
       try {
         responseMap.put("result", "success");
@@ -56,11 +54,10 @@ public class BroadBandHandler implements Route {
         responseMap.put("It was retrieved on", theDateTime);
 
         this.cache.addPastRequestCache(countyName + ", " + stateName, responseMap.toString());
-
         return responseMap;
 
       } catch (Exception e) {
-        responseMap.put("result", "error: problem with inputs");
+        responseMap.put("result", this.errorMessage);
       }
     } else {
       // getting data from past request stored in cache
@@ -85,49 +82,48 @@ public class BroadBandHandler implements Route {
 
     if (idOfState != null) {
       String url =
-          "https://api.census.gov/data/2010/dec/sf1?get=NAME&for=county:*&in=state:" + idOfState;
+              "https://api.census.gov/data/2010/dec/sf1?get=NAME&for=county:*&in=state:" + idOfState;
 
-      try {
-        //Checks if the county cache already contains that county and if so just pull from cache
-        if (this.cache.getCountyCache().getIfPresent(countyName) == null) {
-          String countyData = sendRequest(url);
-          List<List<String>> dataPackage = ACSDataSource.deserializeACSPackage(countyData);
-          if (dataPackage != null) {
-            for (List<String> state : dataPackage) {
-              String name = state.get(0);
-              if (name.equals(countyName + ", " + stateName))  {
-                String countyID = state.get(2);
-                this.ifFound = true;
-                this.cache.addCountyCache(countyName, countyID);
-              } else if (name.equals(countyName + " County, " + stateName)){
-                String countyID = state.get(2);
-                this.ifFound = true;
-                this.cache.addCountyCache(countyName, countyID);
-              }
+      //Checks if the county cache already contains that county and if so just pull from cache
+      if (this.cache.getCountyCache().getIfPresent(countyName) == null) {
+        String countyData = sendRequest(url);
+        List<List<String>> dataPackage = ACSDataSource.deserializeACSPackage(countyData);
+        if (dataPackage != null) {
+          for (List<String> state : dataPackage) {
+            String name = state.get(0);
+            if (name.equals(countyName + ", " + stateName)) {
+              String countyID = state.get(2);
+              this.ifFound = true;
+              this.cache.addCountyCache(countyName, countyID);
+            } else if (name.equals(countyName + " County, " + stateName)) {
+              String countyID = state.get(2);
+              this.ifFound = true;
+              this.cache.addCountyCache(countyName, countyID);
             }
+            this.ifFound = false;
           }
         }
-
-        if(this.ifFound) {
-          // retrieving county ID from existing cache
-          String idOfCounty = this.cache.getCountyCache().getIfPresent(countyName);
-          String finalURL =
-                  "https://api.census.gov/data/2021/acs/acs1/subject/variables?get=NAME,S2802_C03_022E&for=county:"
-                          + idOfCounty
-                          + "&in=state:"
-                          + idOfState;
-
-          String broadBandData = sendRequest(finalURL);
-          this.bBD = ACSDataSource.deserializeACSPackage(broadBandData);
-
-        } else{
-          System.err.println("Error: County Not Found. Please check it is inputted correctly.");
-        }
-      } catch (URISyntaxException e) {
-        System.err.println("Error: API URI is wrong");
       }
-    } else{
-      System.err.println("Error: State Not Found. Please check it is inputted correctly.");
+
+      if (this.ifFound) {
+        // retrieving county ID from existing cache
+        String idOfCounty = this.cache.getCountyCache().getIfPresent(countyName);
+        String finalURL =
+                "https://api.census.gov/data/2021/acs/acs1/subject/variables?get=NAME,S2802_C03_022E&for=county:"
+                        + idOfCounty
+                        + "&in=state:"
+                        + idOfState;
+
+        String broadBandData = sendRequest(finalURL);
+        this.bBD = ACSDataSource.deserializeACSPackage(broadBandData);
+
+      } else {
+        this.errorMessage = "Error: County Not Found. Please check it is inputted correctly like " +
+                "capitalization and spelling";
+      }
+    } else {
+      this.errorMessage = "Error: State Not Found. Please check it is inputted correctly like " +
+              "capitalization and spelling.";
     }
   }
 
