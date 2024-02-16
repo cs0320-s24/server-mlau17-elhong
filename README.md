@@ -6,19 +6,21 @@
 **Repo Link:**
 
 # Design Choices
-**Relationships between classes/interfaces:**
+## Relationships between classes/interfaces:
 
 Our program is divided in 3 folders: csv parser, data, and server.
 
-The first csvparser folder contains the program to parse and search a given CSV file with the following classes:
- -> 
+The first csvparser folder contains the program to parse and search a given CSV file. This part of the program is designed around three core classes — CSVParser, Searcher, and Main — alongside the interface CreatorFromRow, to cater to diverse user needs. CSVParser focuses on parsing CSV files into a flexible List format. Searcher enables searches within the parsed data based on user inputs, supporting partial and case-insensitive matches to streamline the search process. This class serves user 1.
+
+The Main class is the user interface of the program, facilitating input prompts for file selection, search criteria, and customization options like column identifiers and header presence. The program's architecture also includes specialized classes like IntegerCreator and StringCreator under the CreatorFromRow interface to support a variety of data types, enhancing the program's flexibility and usability.
+
+The getHeader method in CSVParser converts headers to lowercase to minimize case sensitivity issues, streamlining data searches. To improve code clarity and search efficiency, separate methods were introduced for searching by column name or index, and for comprehensive dataset searches. This approach not only simplifies the search method. Additionally, to accommodate user input errors, the program allows users a second attempt to enter data correctly, enhancing usability by making the system more forgiving and reducing potential frustration.
  
 The second data folder contains the csv data on Rhode Island income from the ACS. 
 
 The third server folder contains the following main classes used in server:
 
 ** -> Server**
-
  The Server class 
  
 ** -> BroadBandHandler**
