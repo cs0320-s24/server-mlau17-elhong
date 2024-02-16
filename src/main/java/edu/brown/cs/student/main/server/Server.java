@@ -8,7 +8,14 @@ import edu.brown.cs.student.main.server.csvhandlers.SearchCSVHandler;
 import edu.brown.cs.student.main.server.csvhandlers.ViewCSVHandler;
 import spark.Spark;
 
-/** Server is the top-level class of this program... */
+/** Server is the top-level class of this program. It contains the main() method which starts Spark and runs the various
+ * handlers (4).
+ *
+ * Note that the CSV handlers take in a serverData representing the loaded csv data from the user inpit filepath, using
+ * depedency injenction to ensure that the endpoints share the same information. Moreover, the SearcCSVHandler also takes
+ * in the instance of load in order to access the CSVParser within its own class.
+ */
+
 public class Server {
 
   static final int port = 3232;
@@ -17,21 +24,14 @@ public class Server {
     int port = 3232;
     Spark.port(port);
 
-    after(
-        (request, response) -> {
-          // TODO: set the * header to a list of trusted origins
-          response.header("Access-Control-Allow-Origin", "*");
-          response.header("Access-Control-Allow-Methods", "*");
-        });
-
-    // Setting up the handlers for the GET /broadband, loadcsv, searchcsv, and viewcsv endpoints
-    Spark.get("broadband", new BroadBandHandler());
     // making a new Global variable
     GlobalData serverData = new GlobalData();
     LoadCSVHandler load = new LoadCSVHandler(serverData);
+    // Setting up the handlers for the GET /broadband, loadcsv, searchcsv, and viewcsv endpoints
     Spark.get("loadcsv", load);
     Spark.get("viewcsv", new ViewCSVHandler(serverData));
     Spark.get("searchcsv", new SearchCSVHandler(serverData, load));
+    Spark.get("broadband", new BroadBandHandler());
 
     Spark.init();
     Spark.awaitInitialization();
