@@ -27,10 +27,13 @@ The third server folder contains the following main classes used in server:
 The Server class contains the high level logic of the program. It contains the main() method which starts Spark and runs the four handlers. Within main, the CSV handlers take in an instance of GlobalData called serverData representing the loaded csv data from the user input filepath, thus using dependency injection to ensure that the handlers share the same information. Moreover, the SearchCSVHandler also takes in the instance of load in order to access the CSVParser within its own class.
  
 **-> BroadBandHandler**
- The BroadBandHandler class handles 
+ The BroadBandHandler class handles the user request of a specific state and county and finds the corresponding broadband data for that request. It contains helper methods to send the request to the ACS API and calls ACSCensusData to deserializes the JSON file that the ACS API returned to us. It also populates the caches that is contained in the ACSCacheData, which we use to stop pinging the ACS API repeatedly for the ids or if the user already searched for those inputs.
  
  **-> ACSCensusData**
-The ACSCensusData class
+The ACSCensusData class contains a method to help deserialize the json package given to us when we send a request to the ACS API that way it is easier for us to parse through it and find the data that we are looking for. The method uses moshi to help us deserialize. It is called by BroadBandHandler after it sends the request to the ACS API.
+
+**-> ACSCacheData**
+The ACSCacheData class is like a global class that contains the three caches that we made and populated each time a new request comes through. Basically acts as a proxy between ACSCacheData and BroadBandHandler, it will search through the caches for data that has been searched before and return that value to BroadBandHandler to use instead of BroadBandHandler pinging the ACS API over and over again. It also contains a method that populates the state to state id cache so we can just search for any state instead of only the ones the user inputted.
 
 **-> LoadCSVHandler**
  The LoadCSVHandler class handles the URL input for load csv, requesting the query parameters for filepath and header and  creating a new CSVParser with this information. It also uses Moshi to deserialize the data, which is stored as a   GlobalData global variable for the other handlers to access.
