@@ -16,9 +16,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import org.testng.collections.Objects;
 import spark.Request;
 import spark.Response;
 import spark.Route;
+
+import javax.naming.CannotProceedException;
 // import com.google.common.cache.CacheLoader;
 // import com.google.common.cache.LoadingCache;
 
@@ -26,6 +30,8 @@ public class BroadBandHandler implements Route {
 
   private List<List<String>> bBD = null;
   private Cache<String, String> stateCache;
+  private Cache<String, String> countyCache;
+  private Cache<String, Map> pastRequestCache;
 
   /**
    * This handle method needs to be filled by any class implementing Route. When the path set in
@@ -35,29 +41,30 @@ public class BroadBandHandler implements Route {
    */
   @Override
   public Object handle(Request request, Response response)
-          throws IOException, InterruptedException {
+          throws IOException, InterruptedException, URISyntaxException {
 
+    //Creates two caches one for state-state id and one for county-county id
     this.stateCache = this.customizableCache(50, 20);
+    this.countyCache = this.customizableCache(100, 20);
 
     String stateName = request.queryParams("state");
-    System.out.println(stateName);
     String countyName = request.queryParams("county");
-    System.out.println(countyName);
     Map<String, Object> responseMap = new HashMap<>();
     this.findBroadBand(stateName, countyName);
-    System.out.println(this.bBD);
     try {
       responseMap.put("result", "success");
-      responseMap.put("for", countyName + "in" + stateName);
-      double band = Double.parseDouble(this.bBD.get(0).get(0));
+      responseMap.put("for", countyName + " in " + stateName);
+      double band = Double.parseDouble(this.bBD.get(1).get(1));
+      System.out.println(band);
       responseMap.put("Percentage", band);
 
       LocalDateTime todayDateTime = LocalDateTime.now();
       DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
       String theDateTime = todayDateTime.format(dateFormatter);
-      responseMap.put("This data was updated on: ", theDateTime);
+      responseMap.put("It was retrieved on", theDateTime);
 
       return responseMap;
+
     } catch (Exception e) {
       responseMap.put("result", "error: problem with inputs");
     }
@@ -84,62 +91,39 @@ public class BroadBandHandler implements Route {
     return sentAPIResponse.body();
   }
 
-  private void findBroadBand(String stateName, String countyName) throws IOException, InterruptedException {
+  private void findBroadBand(String stateName, String countyName) throws IOException, InterruptedException, URISyntaxException {
 
-    Cache<String, String> countyCache = customizableCache(100, 50);
-
-    String urlForStateId = "https://api.census.gov/data/2010/dec/sf1?get=NAME&for=state:*";
-
-    try {
-      String stateData = sendRequest(urlForStateId);
-      System.out.println(stateData);
-      List<List<String>> packageOfStates = ACSDataSource.deserializeACSPackage(stateData);
-      System.out.println(packageOfStates);
-
-      if (packageOfStates != null) {
-        for (List<String> state : packageOfStates) {
-          String name = state.get(0);
-          System.out.println(name);
-          String stateID = state.get(1);
-          System.out.println(stateID);
-          this.stateCache.put(name, stateID);
-        }
-      }
-    } catch (URISyntaxException e) {
-      System.err.println("Error: URI is invalid.");
-    }
+    //Populates the Cache with all the states and its corresponding state IDs
+    this.populateStateCache(stateName);
 
     String idOfState = this.stateCache.getIfPresent(stateName);
-    System.out.println(idOfState);
 
     if (idOfState != null) {
-      System.out.println("found id state");
       String url =
           "https://api.census.gov/data/2010/dec/sf1?get=NAME&for=county:*&in=state:" + idOfState;
 
       try {
-        String countyData = sendRequest(url);
-        System.out.println(countyData);
-        List<List<String>> dataPackage = ACSDataSource.deserializeACSPackage(countyData);
-        System.out.println(dataPackage);
-        if (dataPackage != null) {
-          for (List<String> state : dataPackage) {
+        //Checks if the county cache already contains that county and if so just pull from cache
+        if (countyCache.getIfPresent(countyName) == null) {
+          String countyData = sendRequest(url);
+          List<List<String>> dataPackage = ACSDataSource.deserializeACSPackage(countyData);
+          if (dataPackage != null) {
+            for (List<String> state : dataPackage) {
               String name = state.get(0);
-              System.out.println(name);
-              String secondName =
-              if (name.equals(countyName + " County, " + stateName)) {
-                System.out.println("name equals worked");
+              if (name.equals(countyName + ", " + stateName))  {
                 String countyID = state.get(2);
-                System.out.println(countyID);
-                countyCache.put(countyName, countyID);
-                System.out.println(countyCache);
 
+                countyCache.put(countyName, countyID);
+              } else if (name.equals(countyName + " County, " + stateName)){
+                String countyID = state.get(2);
+
+                countyCache.put(countyName, countyID);
               }
+            }
           }
         }
 
         String idOfCounty = countyCache.getIfPresent(countyName);
-        //System.out.println(idOfCounty);
 
         String finalURL =
             "https://api.census.gov/data/2021/acs/acs1/subject/variables?get=NAME,S2802_C03_022E&for=county:"
@@ -158,4 +142,20 @@ public class BroadBandHandler implements Route {
     }
   }
 
+  private void populateStateCache(String nameOfState) throws IOException, URISyntaxException, InterruptedException {
+    String urlForStateId = "https://api.census.gov/data/2010/dec/sf1?get=NAME&for=state:*";
+
+    String stateData = sendRequest(urlForStateId);
+    System.out.println(stateData);
+    List<List<String>> packageOfStates = ACSDataSource.deserializeACSPackage(stateData);
+    System.out.println(packageOfStates);
+
+    if (packageOfStates != null) {
+      for (List<String> state : packageOfStates) {
+        String name = state.get(0);
+        String stateID = state.get(1);
+        this.stateCache.put(name, stateID);
+      }
+    }
+  }
 }
