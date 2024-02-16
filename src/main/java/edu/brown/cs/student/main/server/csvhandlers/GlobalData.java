@@ -12,7 +12,7 @@ public class GlobalData {
   public GlobalData() {}
 
   public List<List<String>> getCsvData() {
-    return csvData;
+    return this.csvData;
   }
 
   public void setCsvData(List<List<String>> newData) {
