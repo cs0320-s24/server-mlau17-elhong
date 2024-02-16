@@ -13,9 +13,7 @@ public class ACSDataSource {
         try{
             Moshi moshi = new Moshi.Builder().build();
             JsonAdapter<List<List<String>>> adapter = moshi.adapter(Types.newParameterizedType(List.class, List.class));
-            List<List<String>> bandData = adapter.fromJson(jsonPackage);
-
-            return bandData;
+            return adapter.fromJson(jsonPackage);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

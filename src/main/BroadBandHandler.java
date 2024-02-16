@@ -14,10 +14,13 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.cache.CacheBuilder;
 //import com.google.common.cache.CacheLoader;
@@ -27,45 +30,35 @@ public class BroadBandHandler implements Route {
 
     private List<List<String>> bBD = null;
 
-    Cache<String, String> stateIdCache = CacheBuilder.newBuilder()
-            .maximumSize(100)
-            .build();
+    public Cache<String,String> customizableCache(int maximumSize, int minuteDelete) {
+        Cache<String,String> makeCache = CacheBuilder.newBuilder()
+                .maximumSize(maximumSize)
+                .expireAfterWrite(minuteDelete, TimeUnit.MINUTES)
+                .build();
 
-    Cache<String, String> countyIdCache = CacheBuilder.newBuilder()
-            .maximumSize(100)
-            .build();
+        return makeCache;
+    }
+
+    Cache<String,String> stateCache = customizableCache(60, 50);
+    Cache<String,String> countyCache = customizableCache(100, 50);
 
     private void CacheStateId() throws IOException, InterruptedException {
 
         String url = "https://api.census.gov/data/2010/dec/sf1?get=NAME&for=state:*";
 
         try {
-            HttpRequest buildStateAPIRequest =
-                    HttpRequest.newBuilder()
-                            .uri(new URI(url))
-                            .GET()
-                            .build();
+            String stateData = sendRequest(url);
+            List<List<String>> dataOfStates = ACSDataSource.deserializeACSPackage(stateData);
 
-            HttpResponse<String> sentStateAPIResponse =
-                    HttpClient.newBuilder()
-                            .build()
-                            .send(buildStateAPIRequest, HttpResponse.BodyHandlers.ofString());
-
-
-            String stateData = sentStateAPIResponse.body();
-            Moshi moshi = new Moshi.Builder().build();
-            JsonAdapter<List<List<String>>> adapter = moshi.adapter(Types.newParameterizedType(List.class, List.class));
-            List<List<String>> data = adapter.fromJson(stateData);
-
-            if (data != null) {
-                for (List<String> state : data) {
+            if (dataOfStates != null) {
+                for (List<String> state : dataOfStates) {
                     String name = state.get(0);
                     String stateID = state.get(1);
-                    stateIdCache.put(name, stateID);
+                    stateCache.put(name, stateID);
                 }
             }
         } catch (URISyntaxException e) {
-            System.err.println("Error: URI is wrong, get it together");
+            System.err.println("Error: URI is invalid.");
         }
     }
 
@@ -89,7 +82,7 @@ public class BroadBandHandler implements Route {
 
         CacheStateId();
 
-        String idOfState = stateIdCache.getIfPresent(stateName);
+        String idOfState = stateCache.getIfPresent(stateName);
 
         if (idOfState != null) {
 
@@ -100,15 +93,17 @@ public class BroadBandHandler implements Route {
                 List<List<String>> dataPackage = ACSDataSource.deserializeACSPackage(countyData);
                 if (dataPackage != null) {
                     for (List<String> state : dataPackage) {
-                        String name = state.get(0);
-                        if (name.equals(countyName)) {
-                            String countyID = state.get(2);
-                            countyIdCache.put(countyName, countyID);
+                        if (countyCache.getIfPresent(countyName) == null) {
+                            String name = state.get(0);
+                            if (name.equals(countyName + " County, " + stateName)) {
+                                String countyID = state.get(3);
+                                countyCache.put(countyName, countyID);
+                            }
                         }
                     }
                 }
 
-                String idOfCounty = countyIdCache.getIfPresent(countyName);
+                String idOfCounty = countyCache.getIfPresent(countyName);
 
                 String finalURL = "https://api.census.gov/data/2021/acs/acs1/subject/variables?get=NAME,S2802_C03_022E&for=county:"
                         + idOfCounty + "&in=state:" + idOfState;
@@ -125,38 +120,33 @@ public class BroadBandHandler implements Route {
 
     /**
      * This handle method needs to be filled by any class implementing Route. When the path set in
-     * edu.brown.cs.examples.moshiExample.server.Server gets accessed, it will fire the handle method.
-     *
-     * <p>NOTE: beware this "return Object" and "throws Exception" idiom. We need to follow it because
-     * the library uses it, but in general this lowers the protection of the type system.
      *
      * @param request  The request object providing information about the HTTP request
      * @param response The response object providing functionality for modifying the response
      */
     @Override
     public Object handle(Request request, Response response) throws IOException, InterruptedException {
-        // If you are interested in how parameters are received, try commenting out and
-        // printing these lines! Notice that requesting a specific parameter requires that parameter
-        // to be fulfilled.
-        // If you specify a queryParam, you can access it by appending ?parameterName=name to the
-        // endpoint
-        // ex. http://localhost:3232/activity?participants=num
-        Set<String> params = request.queryParams();
-        System.out.println(params);
+
         String stateName = request.queryParams("State Name");
         String countyName = request.queryParams("County Name");
-        System.out.println(stateName);
-
-        // Creates a hashmap to store the results of the request
         Map<String, Object> responseMap = new HashMap<>();
         findBroadBand(stateName, countyName);
+
         try {
             responseMap.put("result", "success");
-            responseMap.put("Percentage", this.bBD);
+            responseMap.put("for", countyName + "in" + stateName);
+            double band = Double.parseDouble(this.bBD.get(0).get(0));
+            responseMap.put("Percentage", band);
+
+            LocalDateTime todayDateTime = LocalDateTime.now();
+            DateTimeFormatter dateFormatter
+                    = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String theDateTime = todayDateTime.format(dateFormatter);
+            responseMap.put("This data was updated on: ", theDateTime);
+
             return responseMap;
         } catch (Exception e) {
-            //e.printStackTrace();
-            responseMap.put("result", "Exception");
+            responseMap.put("result", "error: problem with inputs");
         }
         return responseMap;
     }
