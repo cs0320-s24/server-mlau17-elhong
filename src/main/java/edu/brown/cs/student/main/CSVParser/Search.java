@@ -172,7 +172,7 @@ public class Search {
     List<List<String>> data = new ArrayList<>();
     List<List<String>> unfilteredData = this.csvtoparse.sortData();
     for (Integer eachNumber : this.containedRows) {
-      List<String> list = unfilteredData.get(eachNumber-1);
+      List<String> list = unfilteredData.get(eachNumber - 1);
       data.add(list);
     }
     return data;
