@@ -1,4 +1,4 @@
-package edu.brown.cs.student.main.server.csvhandlers;
+package edu.brown.cs.student.main.server.CSV;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
@@ -28,8 +28,10 @@ public class ViewCSVHandler implements Route {
   }
 
   /**
-   * This method creates a response map by accessing the CSV data from the global variable data
+   * This method creates a response map by accessing the CSV data from the global variable "data"
    * using a getter method and returns this data to the user.
+   *
+   * @return the response map as a JSON file
    */
   @Override
   public Object handle(Request request, Response response) {
@@ -39,9 +41,15 @@ public class ViewCSVHandler implements Route {
     // map for the response result
     Map<String, Object> responseMap = new HashMap<>();
 
-    responseMap.put("status", "success");
-    responseMap.put("CSVdata", this.data.getCsvData());
-
+    // checking to see if the data was populated
+    if (!this.data.isEmpty()) {
+      responseMap.put("status", "success");
+      responseMap.put("CSVdata", this.data.getCsvData());
+    }
+    if (this.data.isEmpty()) {
+      responseMap.put("status", "error");
+      responseMap.put("message", "Please load a csv file first before viewing.");
+    }
     // converting to JSON
     return adapter.toJson(responseMap);
   }

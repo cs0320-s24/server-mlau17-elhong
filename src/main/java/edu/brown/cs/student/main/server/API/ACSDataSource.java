@@ -3,14 +3,12 @@ package edu.brown.cs.student.main.server.API;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
-
 import java.io.IOException;
 import java.util.List;
 
-
 /**
- * ACSDataSource helps BroadBandHandler deserialize all the JSON packages returned by the web API
- * as a List<List<String>> which makes it easier to run for loops and use .get method with.
+ * ACSDataSource helps BroadBandHandler deserialize all the JSON packages returned by the web API as
+ * a List<List<String>> which makes it easier to run for loops and use .get method with.
  */
 public class ACSDataSource {
 

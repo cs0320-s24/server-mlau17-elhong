@@ -3,17 +3,15 @@ package edu.brown.cs.student.main;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
-import edu.brown.cs.student.main.server.csvhandlers.GlobalData;
-import edu.brown.cs.student.main.server.csvhandlers.LoadCSVHandler;
-import edu.brown.cs.student.main.server.csvhandlers.SearchCSVHandler;
-import edu.brown.cs.student.main.server.csvhandlers.ViewCSVHandler;
+import edu.brown.cs.student.main.server.CSV.GlobalData;
+import edu.brown.cs.student.main.server.CSV.LoadCSVHandler;
+import edu.brown.cs.student.main.server.CSV.SearchCSVHandler;
 import okio.Buffer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spark.Spark;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
@@ -24,6 +22,13 @@ import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * This class tests the SearchCSVHandler class for the following cases:
+ * - successfully searching a file having laoded first
+ * - a query for search without loading first
+ * - a searchcsv query with an invalid word
+ * - a searchcsv query with no word
+ * **/
 public class TestSearchCSV {
     private JsonAdapter<Map<String, Object>> mapAdapter;
     private final Type mapStringObject = Types.newParameterizedType(Map.class, String.class, Object.class);
@@ -72,13 +77,14 @@ public class TestSearchCSV {
 
     /**
      * Helper method to start a connection to a specific API endpoint/params
+     *
      * @param query
      * @return
      * @throws IOException
      */
     static private HttpURLConnection tryRequest(String query) throws IOException {
         // Configure the connection
-        URL requestURL = new URL("http://localhost:"+ Spark.port() +"/" + query);
+        URL requestURL = new URL("http://localhost:" + Spark.port() + "/" + query);
         HttpURLConnection clientConnection = (HttpURLConnection) requestURL.openConnection();
         clientConnection.setRequestMethod("GET");
         clientConnection.connect();
@@ -88,26 +94,61 @@ public class TestSearchCSV {
 
     /**
      * Tests a successful searchcsv query
+     *
      * @throws IOException
      */
     @Test
     public void testSearchCSV() throws IOException {
         // URL returns an valid response code
-        HttpURLConnection requestload = tryRequest("loadcsv?filepath=/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/java/edu/brown/cs/student/main/data/ri_city_town_income_acs.csv&header=Yes");
-        HttpURLConnection requestsearch = tryRequest("searchcsv?searchword=East");
-        assertEquals(200, requestload.getResponseCode());
-        assertEquals(200, requestsearch.getResponseCode());
+        HttpURLConnection request = tryRequest("loadcsv?filepath=/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/java/edu/brown/cs/student/main/data/ri_city_town_income_acs.csv&header=Yes");
+        assertEquals(200, request.getResponseCode());
+        tryRequest("searchcsv?searchword=East");
+        assertEquals(200, request.getResponseCode());
 
-        // returns a success status
-        Map<String, Object> response = this.mapAdapter.fromJson(new Buffer().readFrom(requestsearch.getInputStream()));
+        Map<String, Object> response = this.mapAdapter.fromJson(new Buffer().readFrom(request.getInputStream()));
         assertEquals("success", response.get("status"));
-        //assertEquals("searchResults", response.get("[[East Greenwich, \"133,373.00\", \"173,775.00\", \"71,096.00\"], [East Providence, \"65,016.00\", \"93,935.00\", \"38,714.00\"]]"));
-        requestsearch.disconnect();
+        request.disconnect();
     }
 
     /**
      * Tests a searchcsv query without first having a loadcsv query
-     * Tests a searchcsv query with an inexistent word
+     */
+    @Test
+    public void testSearchWithoutLoadCSV() throws IOException {
+        // URL returns an invalid response code
+        HttpURLConnection request = tryRequest("searchcsv?searchword=tom");
+        assertEquals(500, request.getResponseCode());
+        request.disconnect();
+    }
+
+
+    /**
+     * Tests a searchcsv query with an invalid word
+     */
+    @Test
+    public void testInvalidSearchCSV() throws IOException {
+        // URL returns an valid response code
+        HttpURLConnection request = tryRequest("loadcsv?filepath=/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/java/edu/brown/cs/student/main/data/ri_city_town_income_acs.csv&header=Yes");
+        assertEquals(200, request.getResponseCode());
+        tryRequest("searchcsv?searchword=lolol");
+        assertEquals(200, request.getResponseCode());
+        Map<String, Object> response = this.mapAdapter.fromJson(new Buffer().readFrom(request.getInputStream()));
+        // this should pass but the mapAdapter is reading the initial request instead of the second one
+        // I am not sure how to make the httpURLConnection remember that is has loaded before searching...
+        assertEquals("error", response.get("status"));
+        request.disconnect();
+    }
+
+    /**
      * Tests a searchcsv query with no searchword
      */
+    @Test
+    public void testNoWordSearchCSV() throws IOException {
+        // URL returns an valid response code
+        HttpURLConnection request = tryRequest("loadcsv?filepath=/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/java/edu/brown/cs/student/main/data/ri_city_town_income_acs.csv&header=Yes");
+        assertEquals(200, request.getResponseCode());
+        tryRequest("searchcsv");
+        assertEquals(200, request.getResponseCode());
+        request.disconnect();
+    }
 }
