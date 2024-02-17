@@ -1,5 +1,7 @@
 package edu.brown.cs.student.main.server;
 
+import edu.brown.cs.student.main.server.API.ACSCacheData;
+import edu.brown.cs.student.main.server.API.BroadBandHandler;
 import edu.brown.cs.student.main.server.csvhandlers.GlobalData;
 import edu.brown.cs.student.main.server.csvhandlers.LoadCSVHandler;
 import edu.brown.cs.student.main.server.csvhandlers.SearchCSVHandler;
@@ -13,13 +15,11 @@ import spark.Spark;
  * and runs the various handlers (4).
  *
  * <p>Note that the CSV handlers take in a serverData representing the loaded csv data from the user
- * inpit filepath, using depedency injenction to ensure that the endpoints share the same
- * information. Moreover, the SearcCSVHandler also takes in the instance of load in order to access
+ * input filepath, using dependency injection to ensure that the endpoints share the same
+ * information. Moreover, the SearchCSVHandler also takes in the instance of load in order to access
  * the CSVParser within its own class.
  */
 public class Server {
-
-  static final int port = 3232;
 
   public static void main(String[] args)
       throws IOException, URISyntaxException, InterruptedException {
