@@ -65,7 +65,7 @@ public class LoadCSVHandler implements Route {
       responseMap.put("status", "error_datasource");
       responseMap.put("message", "No filepath found. Please enter the full file path.");
 
-    } else{
+    } else {
       System.out.println("No filepath");
       responseMap.put("status", "error_datasource");
       responseMap.put("message", "Invalid filepath. Please enter the full file path.");

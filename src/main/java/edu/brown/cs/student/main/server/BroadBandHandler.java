@@ -128,10 +128,10 @@ public class BroadBandHandler implements Route {
             "Error: County Not Found. Please check it is inputted correctly like "
                 + "capitalization and spelling";
       }
-    } //else {
-      //this.errorMessage =
-          //"Error: State Not Found. Please check it is inputted correctly like "
-              //+ "capitalization and spelling.";
-    //}
+    } // else {
+    // this.errorMessage =
+    // "Error: State Not Found. Please check it is inputted correctly like "
+    // + "capitalization and spelling.";
+    // }
   }
 }
