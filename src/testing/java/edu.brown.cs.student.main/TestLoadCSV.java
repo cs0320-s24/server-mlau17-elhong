@@ -54,8 +54,6 @@ public class TestLoadCSV {
         // restart the entire Spark server for every test
         LoadCSVHandler load = new LoadCSVHandler(csvData);
         Spark.get("loadcsv", new LoadCSVHandler(csvData));
-        Spark.get("viewcsv", new ViewCSVHandler(csvData));
-        Spark.get("searchcsv", new SearchCSVHandler(csvData, load));
 
         Spark.init();
         Spark.awaitInitialization(); // don't continue until the server is listening
@@ -66,8 +64,6 @@ public class TestLoadCSV {
     public void teardown() {
         // Gracefully stop Spark listening on all three endpoints after each test
         Spark.unmap("loadcsv");
-        Spark.unmap("viewcsv");
-        Spark.unmap("searchcsv");
         Spark.awaitStop(); // don't proceed until the server is stopped
     }
 
@@ -110,7 +106,24 @@ public class TestLoadCSV {
     @Test
     public void testLoadCSVNoFile() throws IOException {
         // URL returns an valid response code
-        HttpURLConnection request = tryRequest("loadcsv?filePath=&header=Yes");
+        HttpURLConnection request = tryRequest("loadcsv?header=No");
+        // unsure about code
+        assertEquals(500, request.getResponseCode());
+
+        // returns a success status
+        Map<String, Object> response = this.mapAdapter.fromJson(new Buffer().readFrom(request.getInputStream()));
+        assertEquals("error_datasource", response.get("status"));
+        request.disconnect();
+    }
+
+    /**
+     * Tests a loadcsv query with no header input
+     * @throws IOException
+     */
+    @Test
+    public void testLoadCSVNoHeader() throws IOException {
+        // URL returns an valid response code
+        HttpURLConnection request = tryRequest("loadcsv?filepath=/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/java/edu/brown/cs/student/main/data/ri_city_town_income_acs.csv");
         // unsure about code
         assertEquals(500, request.getResponseCode());
 
@@ -135,48 +148,4 @@ public class TestLoadCSV {
         assertEquals("error_datasource", response.get("status"));
         request.disconnect();
     }
-
-    /**
-     * Tests a successful viewcsv query
-     * @throws IOException
-     */
-    @Test
-    public void testViewCSV() throws IOException {
-        // URL returns an valid response code
-        HttpURLConnection request = tryRequest("viewcsv");
-        assertEquals(200, request.getResponseCode());
-
-        // returns a success status
-        Map<String, Object> response = this.mapAdapter.fromJson(new Buffer().readFrom(request.getInputStream()));
-        assertEquals("success", response.get("status"));
-        request.disconnect();
-    }
-
-    /**
-     * Tests a viewcsv query without first having a loadcsv query
-     * Tests a searchcsv query without first having a loadcsv query
-     * Tests a searchcsv query with an inexistent word
-     * Tests a searchcsv query with no searchword
-     */
-
-    /**
-     * Tests a successful searchcsv query
-     * @throws IOException
-     */
-    @Test
-    public void testSearchCSV() throws IOException {
-        // URL returns an valid response code
-        HttpURLConnection requestload = tryRequest("loadcsv?filepath=/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/java/edu/brown/cs/student/main/data/ri_city_town_income_acs.csv&header=Yes");
-        HttpURLConnection requestsearch = tryRequest("searchcsv?searchword=East");
-        assertEquals(200, requestload.getResponseCode());
-        assertEquals(200, requestsearch.getResponseCode());
-
-        // returns a success status
-        Map<String, Object> response = this.mapAdapter.fromJson(new Buffer().readFrom(requestsearch.getInputStream()));
-        assertEquals("success", response.get("status"));
-        //assertEquals("searchResults", response.get("[[East Greenwich, \"133,373.00\", \"173,775.00\", \"71,096.00\"], [East Providence, \"65,016.00\", \"93,935.00\", \"38,714.00\"]]"));
-        requestsearch.disconnect();
-    }
-
-
 }

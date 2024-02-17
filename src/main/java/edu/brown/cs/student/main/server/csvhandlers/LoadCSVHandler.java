@@ -4,8 +4,11 @@ import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
 import edu.brown.cs.student.main.CSVParser.CSVParser;
+import edu.brown.cs.student.main.CSVParser.FactoryFailureException;
 import edu.brown.cs.student.main.CSVParser.StringCreator;
+
 import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
 import spark.Request;
@@ -23,6 +26,7 @@ public class LoadCSVHandler implements Route {
   public Boolean header;
   public GlobalData data;
   public CSVParser parser;
+  public Map<String, Object> responseMap;
 
   /**
    * Constructor accepts a GlobalData which stores the results of load.
@@ -40,37 +44,63 @@ public class LoadCSVHandler implements Route {
     Type mapStringObject = Types.newParameterizedType(Map.class, String.class, Object.class);
     JsonAdapter<Map<String, Object>> adapter = moshi.adapter(mapStringObject);
     // map for the response result
-    Map<String, Object> responseMap = new HashMap<>();
+    this.responseMap = new HashMap<>();
 
     // taking the query parameters
     String filepath = request.queryParams("filepath");
     String header = request.queryParams("header");
+    System.out.println("filepath" + filepath);
+    System.out.println("header" + header);
+
+    // if there is no filepath input
+    try {
+      if (filepath.equals("null")) {
+      }
+      // if there is no header input
+      if (header.equals("null")) {
+      }
+      // if there are neither header not filepath input
+      if (filepath.equals("null") && header.equals("null")) {
+      }
+    } catch (Exception e) {
+      responseMap.put("status", "error_datasource");
+      responseMap.put("message", "Missing parameter(s). Make sure to type in the full file path and the header using Yes or No.");
+      return adapter.toJson(responseMap);
+    }
+
+    // if the header input is invalid
+    if (!header.equals("Yes") && !header.equals("No")) {
+      this.responseMap.put("status", "error_datasource");
+      this.responseMap.put("message", "Please try again and input the header using Yes or No");
+      return adapter.toJson(responseMap);
+    }
+
     this.header = this.checkHeader(header);
 
-    System.out.println(filepath);
+    try {
+      // only allowing filepaths to the data folder in this program
+      if (filepath.contains("/Users/emilyhong/Desktop/cs0320/server-mlau17-elhong/src/main/java/edu/brown/cs/student/main/data")) {
+        this.filepath = filepath;
+        FileReader reader = new FileReader(filepath);
+        this.parser = new CSVParser<>(new StringCreator(), this.header, reader);
+        this.data.setCsvData(this.parser.sortData());
 
-    if (filepath != null) {
-      this.filepath = filepath;
-      FileReader reader = new FileReader(filepath);
-      this.parser = new CSVParser<List<String>>(new StringCreator(), this.header, reader);
-      this.data.setCsvData(parser.sortData());
+        // putting the results into the responseMap
+        this.responseMap.put("status", "success");
+        this.responseMap.put("filepath", filepath);
 
-      // putting the results into the responseMap
-      responseMap.put("status", "success");
-      responseMap.put("filepath", filepath);
 
+      } else {
+        // when filepath is invalid, error message
+        this.responseMap.put("status", "error_datasource");
+        this.responseMap.put("message", "No filepath found. Please enter the full or correct file path.");
+      }
+    } catch (IOException | FactoryFailureException e) {
+      responseMap.put("status", "error_datasource");
       // converting to JSON
-    } else if (filepath.equals(null)) {
-      System.out.println("No filepath");
-      responseMap.put("status", "error_datasource");
-      responseMap.put("message", "No filepath found. Please enter the full file path.");
-
-    } else {
-      System.out.println("No filepath");
-      responseMap.put("status", "error_datasource");
-      responseMap.put("message", "Invalid filepath. Please enter the full file path.");
+      return adapter.toJson(this.responseMap);
     }
-    return adapter.toJson(responseMap);
+    return adapter.toJson(this.responseMap);
   }
 
   /** This method sets the header boolean according to user input */
@@ -81,9 +111,6 @@ public class LoadCSVHandler implements Route {
     }
     if (headerInput.equals("No")) {
       return false;
-    } else {
-      System.out.println("Please try again and answer using Yes or No");
-      System.exit(0);
     }
     return false;
   }
