@@ -19,8 +19,6 @@ public class BroadBandHandler implements Route {
 
   private List<List<String>> bBD = null;
   private final ACSCacheData cache;
-  private boolean ifFound;
-  private String errorMessage;
 
   public BroadBandHandler(ACSCacheData cache){
     this.cache = cache;
@@ -34,15 +32,15 @@ public class BroadBandHandler implements Route {
    */
   @Override
   public Object handle(Request request, Response response)
-          throws IOException, InterruptedException, URISyntaxException {
+          throws IOException, InterruptedException, URISyntaxException, APIException {
 
     String stateName = request.queryParams("state");
     String countyName = request.queryParams("county");
     Map<String, Object> responseMap = new HashMap<>();
 
     if (this.cache.getPastRequestCache().getIfPresent(countyName + ", " + stateName) == null) {
-      this.findBroadBand(stateName, countyName);
       try {
+        this.findBroadBand(stateName, countyName);
         responseMap.put("result", "success");
         responseMap.put("for", countyName + " in " + stateName);
         double band = Double.parseDouble(this.bBD.get(1).get(1));
@@ -56,8 +54,8 @@ public class BroadBandHandler implements Route {
         this.cache.addPastRequestCache(countyName + ", " + stateName, responseMap.toString());
         return responseMap;
 
-      } catch (Exception e) {
-        responseMap.put("result", this.errorMessage);
+      } catch (APIException e) {
+        responseMap.put("Problem", e.getMessage());
       }
     } else {
       // getting data from past request stored in cache
@@ -76,7 +74,7 @@ public class BroadBandHandler implements Route {
     return sentAPIResponse.body();
   }
 
-  private void findBroadBand(String stateName, String countyName) throws IOException, InterruptedException, URISyntaxException {
+  private void findBroadBand(String stateName, String countyName) throws IOException, InterruptedException, URISyntaxException, APIException {
 
     String idOfState = this.cache.getStateCache().getIfPresent(stateName);
 
@@ -93,38 +91,32 @@ public class BroadBandHandler implements Route {
             String name = state.get(0);
             if (name.equals(countyName + ", " + stateName)) {
               String countyID = state.get(2);
-              this.ifFound = true;
               this.cache.addCountyCache(countyName, countyID);
             } else if (name.equals(countyName + " County, " + stateName)) {
               String countyID = state.get(2);
-              this.ifFound = true;
               this.cache.addCountyCache(countyName, countyID);
             }
-            this.ifFound = false;
           }
         }
       }
 
-      if (this.ifFound) {
         // retrieving county ID from existing cache
         String idOfCounty = this.cache.getCountyCache().getIfPresent(countyName);
-        String finalURL =
-                "https://api.census.gov/data/2021/acs/acs1/subject/variables?get=NAME,S2802_C03_022E&for=county:"
-                        + idOfCounty
-                        + "&in=state:"
-                        + idOfState;
+        if (idOfCounty != null) {
+          String finalURL =
+                  "https://api.census.gov/data/2021/acs/acs1/subject/variables?get=NAME,S2802_C03_022E&for=county:"
+                          + idOfCounty
+                          + "&in=state:"
+                          + idOfState;
 
-        String broadBandData = sendRequest(finalURL);
-        this.bBD = ACSDataSource.deserializeACSPackage(broadBandData);
-
+          String broadBandData = sendRequest(finalURL);
+          this.bBD = ACSDataSource.deserializeACSPackage(broadBandData);
+        } else{
+          throw new APIException("County not Found");
+        }
       } else {
-        this.errorMessage = "Error: County Not Found. Please check it is inputted correctly like " +
-                "capitalization and spelling";
+        throw new APIException("State not Found");
       }
-    } else {
-      this.errorMessage = "Error: State Not Found. Please check it is inputted correctly like " +
-              "capitalization and spelling.";
-    }
   }
 
 }
