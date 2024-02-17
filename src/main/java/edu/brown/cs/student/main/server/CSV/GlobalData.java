@@ -1,4 +1,4 @@
-package edu.brown.cs.student.main.server.csvhandlers;
+package edu.brown.cs.student.main.server.CSV;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,15 +13,35 @@ public class GlobalData {
 
   public GlobalData() {}
 
+  /**
+   * Getter method for the data
+   *
+   * @return the parsed csv data
+   * */
   public List<List<String>> getCsvData() {
     return this.csvData;
   }
 
+  /** Setting csv data */
   public void setCsvData(List<List<String>> newData) {
+    this.csvData.clear();
     this.csvData = newData;
   }
 
+  /** Clearing the dataset */
   public void clear() {
     this.csvData.clear();
+  }
+
+  /**
+   * Checking id empty
+   *
+   * @return boolean is empty
+   * */
+  public boolean isEmpty() {
+    if (this.csvData.isEmpty()) {
+      return true;
+    }
+    return false;
   }
 }
