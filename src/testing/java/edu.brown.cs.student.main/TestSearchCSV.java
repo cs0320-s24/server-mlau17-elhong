@@ -1,4 +1,4 @@
-package edu.brown.cs.student.main;
+package testing.java.edu.brown.cs.student.main;
 
 public class TestSearchCSV {
 }
