@@ -1,4 +1,4 @@
-package edu.brown.cs.student.main.server;
+package edu.brown.cs.student.main.server.API;
 
 /**
  * An exception class where we can string in our own messages and .getMessage to help

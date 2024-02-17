@@ -1,7 +1,8 @@
-package edu.brown.cs.student.main.server;
+package edu.brown.cs.student.main.server.API;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;

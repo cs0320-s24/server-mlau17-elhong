@@ -1,8 +1,9 @@
-package edu.brown.cs.student.main.server;
+package edu.brown.cs.student.main.server.API;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
+
 import java.io.IOException;
 import java.util.List;
 
