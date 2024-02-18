@@ -6,7 +6,7 @@
 
 **Total estimated time it took to complete project:** 30 hours
 
-**Repo Link:**
+**Repo Link:** https://github.com/cs0320-s24/server-mlau17-elhong.git
 
 # Design Choices
 ## Relationships between classes/interfaces:
@@ -61,9 +61,12 @@ To minimize runtime on ACS API queries, we created three Guava Caches in the cla
 # Errors/Bugs
 One of the largest problems we encountered was merging in Git Hub, for some reason it would not display where the merge conflicts were, and even with help from TAs, we could not complete merging without our project getting messed up or some GitHub error message being displayed. Unfortunately, we still cannot figure out where the problem was but to help us continue the project we tried to create multiple branches, communicate effectively when we are going to pull, and try to match up as much information as possible before pushing.
 
-Another bug one of us encountered was with the imports so she was not able to test any of her tests, she tried to add another dependency to her pom.xml, mvn clean install, mvn package, reload project, and searched on edStem and Google. She also compared all of her files with her partner, but still, no solution was found and due to time reasons she just decided to sample write all her tests. She is hoping to inquire from the TA or Professor Nelson soon.
+Another bug one of us encountered was with the imports so she was not able to test any of her tests, she tried to add another dependency to her pom.xml, mvn clean install, mvn package, reload project, and searched on edStem and Google. She also compared all of her files with her partner, but still, no solution was found and due to time reasons she just decided to sample write all her tests. She is hoping to inquire from the TA or Professor Nelson soon. Due to these reasons, the tests for BroadBandHandler and ACSDataSource do not pass.
 
-One bug is that our code does not take into consideration that the user accidentally puts in the lowercase of the state and county names. To replicate this, just put in the lowercase of a state or county name then wait for the response, which should just say bad request and tell the user to check spelling and other things.
+Next, our code does not take into consideration that the user accidentally puts in the lowercase of the state and county names. To replicate this, just put in the lowercase of a state or county name then wait for the response, which should just say bad request and tell the user to check spelling and other things.
+
+Finally, while our code accounts for all other cases of missing variables and calls on view and search csv without first loading, for reasons we do not yet comprehend, when we input searchcsv with an invalid search word into the URL without first loading, a 500 error code is returned. This does not occur when only inputting searchcsv or when the same input is given after first loading, but just in this specific case and order.
+
 
 # Tests
 Explain the testing suites that you implemented for your program and how each test ensures that a part of the program works. 
@@ -77,8 +80,10 @@ The testing suite for ACSDataSource tests if the deserializer is working and tur
 The testing suite for ACSCacheData tests if the state-to-state ID cache is populating correctly, and all the get and add methods. 
 
 # How to
-Run the tests you wrote/were provided
-To build and run our program...
+
+To run the tests you wrote/were provided: Run our tests using the large or small green buttons in Intellij, or by using mvn package.
+
+To build and run our program:
 
 For ACS API:
 1.) Click the run button
@@ -86,4 +91,12 @@ For ACS API:
 3.) After 3232, add "/broadband?state=*&county=*"
 4.) Replace the * with the name of the state and county you want to look for
 5.) Wait and the response should be out soon!
+
+For CSV API:
+1.) Click the run button
+2.) Click on the link that is displayed
+3.) After 3232, to load a csv add "/loadcsv?filepath=[insert your absolute filepath here]&header=[insert Yes or No]"
+4.) To view your csv, delete the past input and write "viewcsv"
+5.) To search for a word in your csv, delete the past input and write "searchcsv?searchword=[insert your searchword]"
+
 
